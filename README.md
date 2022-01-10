@@ -9,11 +9,11 @@ The class relies on the fast *Batch Algorithm*, implemented fully in `numpy`, in
 
 Self-Organizing Maps can be thought of, in principle, as a generalization of *Vector Quantization* (K-Means clustering), in that they aim to recreate the topological structure of the dataset ![](https://render.githubusercontent.com/render/math?math=\{\boldsymbol{x}_1,\ldots,\boldsymbol{x}_n\}) using a finite number of prototype vectors ![](https://render.githubusercontent.com/render/math?math=\{\boldsymbol{w}_{i,j}\}).
 
-The difference between K-Means and Self-Organizing Maps is that the prototypes aren't just a set of centroids, whose corresponding Voronoi Cells are the clusters. On the contrary, they are interrelated through a fixed rectangular 2D graph (with coordinates *i, j*), which dictates a regime of collaboration among its units, according to their neighborhood relationship within the graph: the corrective displacements applied by the algorithm to the prototype ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i,j}) is propagated to the ones corresponding to neighboring units ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i',j'}), with an effect modulated over the distance ![](https://render.githubusercontent.com/render/math?math=\vert\(i,j\) - \(i',j'\)\vert), according to an appropriate neighborhood function.
+The difference between K-Means and Self-Organizing Maps is that the prototypes aren't just a set of centroids, whose corresponding Voronoi Cells are the clusters. On the contrary, they are interrelated through a fixed rectangular 2D graph (with coordinates *i, j*), which dictates a regime of collaboration among its units, according to their neighborhood relationship within the graph: the corrective displacements applied by the algorithm to the prototype ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i,j}) is propagated to the ones corresponding to neighboring units ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i',j'}), with an effect modulated over the distance ![](https://render.githubusercontent.com/render/math?math=\vert\(i,j\)-\(i',j'\)\vert), according to an appropriate neighborhood function.
 
 If the graph relations are displayed in data-space connecting the prototypes with the appropriate edges, we can see that what the Self-Organizing Map does is recreating as best as possible the multidimensional distribution of the data bending and stretching a 2D blanket of discrete points.
 
-Normally, Self-Organizing Maps are used as an exploratory Data Science tool. For this purpose, I have added some visualization facilities. In particular, methods to generate numerically or visualize heat-map matrix representations of the learnt prototype distribution: the *U*-Matrix, which encodes the presence of clusters of prototypes, the *P*-Matrix, which encodes density estimates of the data around the prototypes, and the $U^*$-Matrix, which refines the *U*-Matrix integrating *P*-Matrix information.
+Normally, Self-Organizing Maps are used as an exploratory Data Science tool. For this purpose, I have added some visualization facilities. In particular, methods to generate numerically or visualize heat-map matrix representations of the learnt prototype distribution: the *U*-Matrix, which encodes the presence of clusters of prototypes, the *P*-Matrix, which encodes density estimates of the data around the prototypes, and the *U\**-Matrix, which refines the *U*-Matrix integrating *P*-Matrix information.
 
 ## Provided functionality
 
@@ -21,7 +21,7 @@ The class currently provides the following features:
 
 * Compatibility with the Scikit-Learn API (`BaseEstimator` and `ClusterMixin` classes).
 * Implementation of the EM-like Batch Algorithm, which converges much faster than the original (1982) *online algorithm*, without the necessity to tune and schedule learning rates.
-* Facilities to draw the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the $U^*$-Matrix.
+* Facilities to draw the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the *U\**-Matrix.
 * A clustering algorithm of the dataset which combines SOM fitting and DBSCAN clustering.
 
 ## Quick guide
