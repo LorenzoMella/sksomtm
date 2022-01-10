@@ -21,10 +21,10 @@ Normally, Self-Organizing Maps are used as an exploratory Data Science tool. For
 
 The class currently provides the following features:
 
-	* Compatibility with the Scikit-Learn API (`BaseEstimator` and `ClusterMixin` classes).
-	* Implementation of the EM-like Batch Algorithm, which converges much faster than the original (1982) *online algorithm*, without the necessity to tune and schedule learning rates.
-	* Facilities to draw the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the $U^*$-Matrix.
-	* A clustering algorithm of the dataset which combines SOM fitting and DBSCAN clustering.
+* Compatibility with the Scikit-Learn API (`BaseEstimator` and `ClusterMixin` classes).
+* Implementation of the EM-like Batch Algorithm, which converges much faster than the original (1982) *online algorithm*, without the necessity to tune and schedule learning rates.
+* Facilities to draw the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the $U^*$-Matrix.
+* A clustering algorithm of the dataset which combines SOM fitting and DBSCAN clustering.
 
 # Quick guide
 
@@ -62,9 +62,9 @@ som.W_               # an ndarray of shape (height, width, n_features)
 
 Getting back to the *average distortion*, it is defined as the mean squared distance between each prototype and its best-matching-unit (BMU) prototype:
 
-\[
+$$
 	\frac{1}{N} \sum_{n = 1}^{N}\Vert x_n - w_{\mathrm{BMU}(x_{n})}  \Vert^2
-\]
+$$
 
 Its final value after training is accessed through
 
