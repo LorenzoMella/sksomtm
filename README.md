@@ -50,7 +50,7 @@ som.fit(X, tol=50)
 
 The two criteria aren't mutually exclusive. If both are set, the algorithm terminates at the first occurring event between the two.
 
-##p# Accessing SOM properties
+### Accessing SOM properties
 
 The main model property of interest (in the Scikit-Learn sense) is the fitted array of prototypes. These are vectors in data-space, hence, they have the same dimensionality as the datapoints. Each prototype is indexed with a pair of non-negative integers, corresponding to the row and column of the corresponding unit.
 
