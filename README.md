@@ -1,23 +1,21 @@
----
-title:
-author:
----
 
-# Introduction
+# `sksomtm` - Self-Organizing Maps, Scikit-Learn Style
+
+## Introduction
 
 The module aims to provide estimator classes compatible with the Scikit-Learn API and implementing the class of Unsupervised Machine Learning algorithms known as *Topographic Mappings*. At the moment the module provides the implementation of the most well-known of these, the Self-Organizing Map (SOM).
 
-The class relies on the fast Batch Algorithm, entirely implemented in `numpy`, in a compact, highly vectorized style that should scale well to larger maps and datasets.
+The class relies on the fast *Batch Algorithm*, implemented fully in `numpy`, in a compact, highly vectorized style that should scale well to larger maps and datasets.
 
-Self-Organizing Maps can be thought of, in principle, as a generalization of *Vector Quantization* (K-Means clustering), in that they aim to recreate the topological structure of the data using a finite number of prototype vectors.
+Self-Organizing Maps can be thought of, in principle, as a generalization of *Vector Quantization* (K-Means clustering), in that they aim to recreate the topological structure of the dataset ![](https://render.githubusercontent.com/render/math?math=\{\boldsymbol{x}_1,\ldots,\boldsymbol{x}_n\}) using a finite number of prototype vectors ![](https://render.githubusercontent.com/render/math?math=\{\boldsymbol{w}_{i,j}\}).
 
-The difference between K-Means and Self-Organizing Maps is that the prototypes aren't just a set of centroids, whose corresponding Voronoi Cells are the clusters. On the contrary, they are interrelated through a fixed rectangular 2D graph, which dictates a regime of collaboration among its units, according to their neighborhood relationship within the graph: the corrective displacements applied by the algorithm to the prototypes is propagated to the ones corresponding to neighboring units.
+The difference between K-Means and Self-Organizing Maps is that the prototypes aren't just a set of centroids, whose corresponding Voronoi Cells are the clusters. On the contrary, they are interrelated through a fixed rectangular 2D graph (with coordinates *i, j*), which dictates a regime of collaboration among its units, according to their neighborhood relationship within the graph: the corrective displacements applied by the algorithm to the prototype ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i,j}) is propagated to the ones corresponding to neighboring units ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i',j'}), with an effect modulated over the distance ![](https://render.githubusercontent.com/render/math?math=\vert\(i,j\) - \(i',j'\)\vert), according to an appropriate neighborhood function.
 
 If the graph relations are displayed in data-space connecting the prototypes with the appropriate edges, we can see that what the Self-Organizing Map does is recreating as best as possible the multidimensional distribution of the data bending and stretching a 2D blanket of discrete points.
 
 Normally, Self-Organizing Maps are used as an exploratory Data Science tool. For this purpose, I have added some visualization facilities. In particular, methods to generate numerically or visualize heat-map matrix representations of the learnt prototype distribution: the *U*-Matrix, which encodes the presence of clusters of prototypes, the *P*-Matrix, which encodes density estimates of the data around the prototypes, and the $U^*$-Matrix, which refines the *U*-Matrix integrating *P*-Matrix information.
 
-# Provided functionality
+## Provided functionality
 
 The class currently provides the following features:
 
@@ -26,9 +24,9 @@ The class currently provides the following features:
 * Facilities to draw the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the $U^*$-Matrix.
 * A clustering algorithm of the dataset which combines SOM fitting and DBSCAN clustering.
 
-# Quick guide
+## Quick guide
 
-## Basic fitting of the estimator
+### Basic fitting of the estimator
 
 Use a `scikit-learn`-compatible style to build and fit the model:
 
@@ -52,7 +50,7 @@ som.fit(X, tol=50)
 
 The two criteria aren't mutually exclusive. If both are set, the algorithm terminates at the first occurring event between the two.
 
-## Accessing SOM properties
+##p# Accessing SOM properties
 
 The main model property of interest (in the Scikit-Learn sense) is the fitted array of prototypes. These are vectors in data-space, hence, they have the same dimensionality as the datapoints. Each prototype is indexed with a pair of non-negative integers, corresponding to the row and column of the corresponding unit.
 
@@ -62,9 +60,7 @@ som.W_               # an ndarray of shape (height, width, n_features)
 
 Getting back to the *average distortion*, it is defined as the mean squared distance between each prototype and its best-matching-unit (BMU) prototype:
 
-$$
-	\frac{1}{N} \sum_{n = 1}^{N}\Vert x_n - w_{\mathrm{BMU}(x_{n})}  \Vert^2
-$$
+![](https://render.githubusercontent.com/render/math?math=\overline{D^2}=\frac{1}{N}\sum_{n=1}^{N}\Vert\boldsymbol{x}_{n}-\boldsymbol{w}_{BMU(\boldsymbol{x}_{n})}\Vert^2 "Average distortion formula")
 
 Its final value after training is accessed through
 
@@ -72,7 +68,7 @@ Its final value after training is accessed through
 som.avg_distortion_             # a float
 ```
 
-## Clustering
+### Clustering
 
 Self-Organizing Maps are appealing in that, intuitively, regions dense with prototypes correspond to "soft-clusters" of the data. The number of this clusters is adaptive to the dataset and needs not be set in advance.
 
@@ -96,13 +92,13 @@ If interested in the *prototype* cluster labels, they are saved in
 som.W_cluster_labels_
 ```
 
-## Graphics
+### Graphics
 
-(`matplotlib` required) If the dataset is 3D, use the following function to display (optionally) the datapoints and (optionally) the prototype mesh.
+If the dataset is 3D, use the following function to display (optionally) the datapoints and (optionally) the prototype mesh:
 
 ```{python}
 som.plot_data_and_prototypes()
-pyplot.show()
+pyplot.show()                   #  matplotlib is required
 ```
 
 Popular visualizations of a trained Self-Organizing Maps are accessible using
@@ -115,4 +111,4 @@ som.plot_pmatrix()
 som.plot_ustarmatrix()
 ```
 
-followed by pyplot.show(), as before.
+followed by `pyplot.show()`, as before.
