@@ -466,14 +466,14 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         """ Plot the P-Matrix. """
         
         pyplot.figure('P-Matrix', figsize=figsize)
-        pyplot.imshow(self.pmatrix(), cmap=cmap)
+        pyplot.imshow(self.pmatrix(X), cmap=cmap)
 
 
     def plot_ustarmatrix(self, figsize=(10, 10), cmap='magma'):
         """ Plot the U*-Matrix. """
 
         pyplot.figure('U*-Matrix', figsize=figsize)
-        pyplot.imshow(self.ustarmatrix(), cmap=cmap)
+        pyplot.imshow(self.ustarmatrix(X), cmap=cmap)
 
 
     def plot_data_and_prototypes(self, X, draw_data=True, draw_prototypes=True, **kwargs):
@@ -502,7 +502,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
 
     def __repr__(self):
 
-        return 'Self-Organizing Map Estimator (height={}, width={}).'.format(
+        return '<Self-Organizing Map Estimator (height={}, width={})>'.format(
             self.height,
             self.width
         )

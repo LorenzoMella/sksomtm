@@ -1,4 +1,3 @@
-
 # `sksomtm` - Self-Organizing Maps, Scikit-Learn Style
 
 ## Introduction
