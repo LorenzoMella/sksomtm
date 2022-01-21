@@ -10,29 +10,32 @@ from .utils import *
 class SelfOrganizingMap(BaseEstimator, ClusterMixin):
     """ Self Organizing Map model for data exploration and clustering.
     
-    The class provides a rectangular-grid Self-Organizing Map with independently
-    chosen side length (`height' and `width').
+    The class provides a rectangular-grid Self-Organizing Map with
+    independently chosen side length (`height' and `width').
     
-    The map prototypes may be initialized either at random locations or as a
-    regular rectangular grid with size geometrically comparable to the dataset,
-    aligned on the plane spanned by the two principal components of the dataset.
+    The map prototypes may be initialized either at random locations or as
+    a regular rectangular grid with size geometrically comparable to the
+    dataset, aligned on the plane spanned by the two principal components
+    of the dataset.
 
-    The class makes use of the EM-like Batch Algorithm, which converges much
-    faster than the original (1982) incremental-learning algorithm, without the
-    necessity to tune and schedule learning rates.
+    The class makes use of the EM-like Batch Algorithm, which converges
+    much faster than the original (1982) incremental-learning algorithm,
+    without the necessity to tune and schedule learning rates.
     
     Normally, Self-Organizing Maps are used as an exploratory Data Science
     tool. For this purpose, I have added some visualization facilities. In
-    particular, methods to generate numerically or visualize heat-map matrix
-    representations of the learnt prototype distribution: the U-Matrix, which
-    encodes the presence of clusters of prototypes, the P-Matrix, which encodes
-    density estimates of the data around the prototypes, and the U*-Matrix,
-    which refines the U-Matrix integrating P-Matrix information.
+    particular, methods to generate numerically or visualize heat-map
+    matrix representations of the learnt prototype distribution: the
+    U-Matrix, which encodes the presence of clusters of prototypes, the
+    P-Matrix, which encodes density estimates of the data around the
+    prototypes, and the U*-Matrix, which refines the U-Matrix integrating
+    P-Matrix information.
 
-    The visualization tools may suggest the presence of data clusters to user's
-    eye.  Clustering functionality has been incorporated to automate cluster
-    discovery, although the use of DBSCAN as a proxy clustering algorithm is to
-    be considered experimental, and may be changed in the future.
+    The visualization tools may suggest the presence of data clusters to
+    user's eye.  Clustering functionality has been incorporated to
+    automate cluster discovery, although the use of DBSCAN as a proxy
+    clustering algorithm is to be considered experimental, and may be
+    changed in the future.
 
     Parameters
     ----------
@@ -58,13 +61,13 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
     ----------
 
     W_ : ndarray of shape (height, width, n_features)
-        W_[i, j, :] is the prototype in data-space corresponding to the SOM unit
-        (i, j)
+        W_[i, j, :] is the prototype in data-space corresponding to the
+        SOM unit (i, j)
 
     avg_distortion_ : float
-        The mean value of the squared distances between each datapoint and the
-        prototype of its best-matching unit (i.e., the closest prototype to the
-        datapoint)
+        The mean value of the squared distances between each datapoint and
+        the prototype of its best-matching unit (i.e., the closest
+        prototype to the datapoint)
     
     W_cluster_labels_ : ndarray of shape (height, width)
         The labels assigned to the SOM units after clustering
@@ -99,7 +102,8 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         
 
     def W_initialize(self, X):
-        """ Apply the required initialization, as specified in the constructor. """
+        """ Apply the required initialization, as specified in the constructor.
+        """
         
         if self.init_strategy == 'random':
             self.W_random_normal_initialize(X)
@@ -110,13 +114,14 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
 
         
     def fit_predict(self, X, y=None, tol=5e-3, max_iter=None, eps=0.5, min_samples=5):
-        """ Train the Self-Organizing Map and clusters the dataset entries.
+        """ Train the Self-Organizing Map and clusters the dataset
+        entries.
 
         After performing the SOM Batch Algorithm, the final prototypes are
-        clustered as proxy for the datapoints, using DBSCAN.  The clustering for
-        the datapoints themselves is performed under a nearest-prototype
-        criterion -- the same that the best-matching unit for a datapoint is
-        chosen.
+        clustered as proxy for the datapoints, using DBSCAN.  The
+        clustering for the datapoints themselves is performed under a
+        nearest-prototype criterion -- the same that the best-matching
+        unit for a datapoint is chosen.
 
         Parameters
         ----------
@@ -145,7 +150,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         -------
 
         self.labels_ : an ndarray of shape (n_samples,)
-            The cluster labels for the datapoins (-1 for `noisy' datapoints)
+            The cluster labels for the datapoins (-1 for unassigned ones)
         """
 
         # Fitting
@@ -231,7 +236,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         max_vals = np.max(X, axis=0)
         
         # Set the means as mid-points between min and max across all features
-        means = np.fabs(max_vals - min_vals)
+        means = 0.5 * np.fabs(max_vals + min_vals)
         
         # Set the standard deviations as |max - min| / 2 for each feature (no covariances)        
         cov = np.diag(0.25 * (max_vals - min_vals) ** 2)
@@ -419,7 +424,8 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         """ Create a U*-Matrix, i.e., a U-Matrix modulated according to data
         density (the P-Matrix).
         
-        Returns -------
+        Returns
+        -------
 
         An ndarray of shape (self.height, self.width)
             The array holding the U*-Matrix.
@@ -478,7 +484,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
 
     def __repr__(self):
 
-        return '<Self-Organizing Map Estimator (height={}, width={}) ID:{}>'.format(
+        return '<Self-Organizing Map Estimator (height={}, width={}) ID:0x{:x}>'.format(
             self.height,
             self.width,
             id(self)
