@@ -53,9 +53,14 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
     neighborhood_type : (unused)
         NOT IMPLEMENTED: changes the neighborhood function in the unit-space
 
-    init_strategy : {'random', 'pca'}, default='pca'
-        Prototype initialization strategy
-    
+    init : {'random', 'pca'}, callable or ndarray of shape \
+            (height, width, n_features), default='pca'
+        If one of the listed str, use the respective built-in
+        prototype initialization strategy; If a function is passed, it
+        should have the design matrix and a random seed as arguments
+        and return an initial prototype matrix. If an ndarray is
+        passed, it is taken (destructively) as the initial prototype
+        matrix
 
     Attributes
     ----------
@@ -69,6 +74,13 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         the prototype of its best-matching unit (i.e., the closest
         prototype to the datapoint)
     
+    n_iter_ : int
+        The number of iterations performed by the Batch Algorithm
+
+    n_features_ : int
+        The number of features in the data (X.shape[1], where X is the
+        design matrix)
+
     W_cluster_labels_ : ndarray of shape (height, width)
         The labels assigned to the SOM units after clustering
         (calling fit_predict)
@@ -78,17 +90,25 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         (calling fit_predict)
     """
    
-    def __init__(self, height=30, width=30, neigh_width=16.0, neighborhood_type='Gaussian',
-                 init_strategy='pca'):
+    def __init__(
+            self,
+            height=30,
+            width=30,
+            neigh_width=16.0,
+            neighborhood_type='Gaussian',
+            init='pca',
+            seed=None
+    ):
 
         super(SelfOrganizingMap, self).__init__()
         
         self.height = height
         self.width = width
+        self.neigh_width = neigh_width        
         self.n_weights = height * width
         self.neighborhood_type = neighborhood_type
-        self.init_strategy = init_strategy
-        self.neigh_width = neigh_width
+        self.init = init
+        self.seed = seed
 
         # Mesh-grid components reused at each update step
         ii, jj = np.ogrid[:height, :width]
@@ -97,6 +117,8 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         
         self.W_ = None
         self.avg_distortion_ = None
+        self.n_iter_ = None
+        self.n_features_ = None
         self.W_cluster_labels_ = None
         self.labels_ = None
         
@@ -105,12 +127,20 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         """ Apply the required initialization, as specified in the constructor.
         """
         
-        if self.init_strategy == 'random':
-            self.W_random_normal_initialize(X)
-        elif self.init_strategy == 'pca':
-            self.W_PCA_plane_initialize(X)
+        if self.init == 'random':
+            self._W_random_normal_initialize(X)
+            
+        elif self.init == 'pca':
+            self._W_PCA_plane_initialize(X)
+            
+        elif callable(self.init):
+            self.W_ = self.init(X, self.seed)
+
+        elif isinstance(self.init, np.ndarray):
+            self.W_ = self.init
+            
         else:
-            raise ValueError('Unknown initialization type {}'.format(self.init_strategy))
+            raise ValueError('Unsupported init value or type')
 
         
     def fit_predict(self, X, y=None, tol=5e-3, max_iter=None, eps=0.5, min_samples=5):
@@ -201,30 +231,32 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         """
 
         self.W_initialize(X)
-        self.update_avg_distortion(X)
+        self._update_avg_distortion(X)
 
-        if max_iter:
-            counter = 0
+        counter = 0
 
         while True:
 
-            old_distortion = self.avg_distortion_
-            self.W_smooth_update(X)
-            self.update_avg_distortion(X)
-
             # Terminate based on max iterations reached or average-distortion stationarity
-            if max_iter and counter < max_iter:
-                counter += 1
-            else:
+            if max_iter and counter >= max_iter:
                 break
+            
+            old_distortion = self.avg_distortion_
+            self._update_W_smooth(X)
+            self._update_avg_distortion(X)
+
+            counter += 1
 
             if tol and np.fabs((self.avg_distortion_ - old_distortion) / old_distortion) < tol:
                 break
 
+        self.n_iter_ = counter
+        self.n_features = X.shape[1]
+        
         return self
 
 
-    def W_random_normal_initialize(self, X):
+    def _W_random_normal_initialize(self, X):
         """ Initialize the prototype cloud at random. 
 
         The prototypes are generated with independent components,
@@ -241,11 +273,11 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         # Set the standard deviations as |max - min| / 2 for each feature (no covariances)        
         cov = np.diag(0.25 * (max_vals - min_vals) ** 2)
         
-        gen = np.random.default_rng(len('John 3:16'))
+        gen = np.random.default_rng(self.seed)
         self.W_ = gen.multivariate_normal(means, cov, size=(self.height, self.width))
     
         
-    def W_PCA_plane_initialize(self, X):
+    def _W_PCA_plane_initialize(self, X):
         """ Initialize the prototypes as a rectangular mesh aligned
         to the first two principal components of the data.
         """
@@ -266,7 +298,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
                    (self.jj * unit_x - stds[1]) * new_basis[:, 1])
         
 
-    def W_smooth_update(self, X):
+    def _update_W_smooth(self, X):
         """ A single update step of the SOM Batch Algorithm.
         
         The SOM Batch Algorithm is essentially the Expectation-Maximization
@@ -294,7 +326,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         
         Other choices of neighbourhood function are:
         
-        Student-t pdf:          h = t(self.neigh_width).pdf(np.sqrt(output_sq_dist))
+        Student-t pdf (scipy):  h = t(self.neigh_width).pdf(np.sqrt(output_sq_dist))
         Sharp indicator:        h = float(output_sq_dist < self.neigh_width)
         Cauchy pdf:             h = 1. / (1. + (output_sq_dist / self.neigh_width) ** 2)
         Gaussian difference:    h = a * np.exp(-0.5 * output_sq_dist / self.neigh_width_a) -
@@ -336,7 +368,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         self.W_ = W_new
 
     
-    def update_avg_distortion(self, X, rate=None):
+    def _update_avg_distortion(self, X, rate=None):
         """ Compute a full-dataset or a stochastic expectation of the distortion,
         that is, the distance between a sample x and its reconstruction W[c(x), :].
         """
@@ -348,7 +380,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
             indices = np.random.randint(0, n_samples, size=int(rate * n_samples))
             X = X[indices, :]
 
-        # Compute best-matching -unit indices for every input
+        # Compute best-matching-unit indices for every input
         sq_dists = sq_distances(X, self.W_).reshape((-1, n_samples))
         winning_units = np.argmin(sq_dists, axis=0)
 
@@ -434,27 +466,6 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         pmat = self.pmatrix(X)
         min_pmat = np.min(pmat)
         return self.umatrix() * (pmat - min_pmat) / (np.mean(pmat) - min_pmat)
-    
-
-    def plot_umatrix(self, figsize=(10, 10), cmap='viridis'):
-        """ Plot the U-Matrix. """
-        
-        pyplot.figure('U-Matrix', figsize=figsize)
-        pyplot.imshow(self.umatrix(), cmap=cmap)
-
-
-    def plot_pmatrix(self, figsize=(10, 10), cmap='magma'):
-        """ Plot the P-Matrix. """
-        
-        pyplot.figure('P-Matrix', figsize=figsize)
-        pyplot.imshow(self.pmatrix(X), cmap=cmap)
-
-
-    def plot_ustarmatrix(self, figsize=(10, 10), cmap='Spectral'):
-        """ Plot the U*-Matrix. """
-
-        pyplot.figure('U*-Matrix', figsize=figsize)
-        pyplot.imshow(self.ustarmatrix(X), cmap=cmap)
 
 
     def plot_data_and_prototypes(self, X, draw_data=True, draw_prototypes=True, **kwargs):
@@ -471,9 +482,14 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
 
         # Draw the prototype mesh
         if draw_prototypes:
-            ax.plot_wireframe(self.W_[..., 0],  self.W_[..., 1], self.W_[..., 2],
-                              linewidth=.3, color='k')
-            ax.scatter(self.W_[..., 0], self.W_[..., 1], self.W_[..., 2], 'b.', s=25)
+            ax.plot_wireframe(
+                self.W_[..., 0],  self.W_[..., 1], self.W_[..., 2],
+                linewidth=.3, color='k'
+            )
+            ax.scatter(
+                self.W_[..., 0], self.W_[..., 1], self.W_[..., 2],
+                'b.', s=25
+            )
 
         # Draw the datapoints
         if draw_data:
@@ -484,8 +500,9 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
 
     def __repr__(self):
 
-        return '<Self-Organizing Map Estimator (height={}, width={}) ID:0x{:x}>'.format(
+        return '<Self-Organizing Map Estimator (height={}, width={}, {}) ID:0x{:x}>'.format(
             self.height,
             self.width,
+            self.init,
             id(self)
         )

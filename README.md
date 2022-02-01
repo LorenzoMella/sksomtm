@@ -1,4 +1,4 @@
-# `sksomtm` - Self-Organizing Maps, Scikit-Learn Style
+# `sksomtm` - A Scikit-Learn-Style package for Self-Organizing Maps
 
 ## Introduction
 
@@ -12,7 +12,7 @@ The difference between K-Means and Self-Organizing Maps is that the prototypes a
 
 If the graph relations are displayed in data-space connecting the prototypes with the appropriate edges, we can see that what the Self-Organizing Map does is recreating as best as possible the multidimensional distribution of the data bending and stretching a 2D blanket of discrete points.
 
-Normally, Self-Organizing Maps are used as an exploratory Data Science tool. For this purpose, I have added some visualization facilities. In particular, methods to generate numerically or visualize heat-map matrix representations of the learnt prototype distribution: the *U*-Matrix, which encodes the presence of clusters of prototypes, the *P*-Matrix, which encodes density estimates of the data around the prototypes, and the *U\**-Matrix, which refines the *U*-Matrix integrating *P*-Matrix information.
+Normally, Self-Organizing Maps are used as an exploratory Data Science tool. For this purpose, I have added some visualization facilities. In particular, methods to generate numerically the most popular heat-map matrix representations of the learnt prototype distribution: the *U*-Matrix, which encodes the presence of clusters of prototypes, the *P*-Matrix, which encodes density estimates of the data around the prototypes, and the *U\**-Matrix, which refines the *U*-Matrix integrating *P*-Matrix information.
 
 ## Provided functionality
 
@@ -20,7 +20,7 @@ The class currently provides the following features:
 
 * Compatibility with the Scikit-Learn API (`BaseEstimator` and `ClusterMixin` classes).
 * Implementation of the EM-like Batch Algorithm, which converges much faster than the original (1982) *online algorithm*, without the necessity to tune and schedule learning rates.
-* Facilities to draw the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the *U\**-Matrix.
+* Facilities to compute the most popular heat-map representations of a trained SOM: *U*-Matrix, but also the *P*-Matrix and the *U\**-Matrix.
 * A clustering algorithm of the dataset which combines SOM fitting and DBSCAN clustering.
 
 ## Quick guide
@@ -29,7 +29,7 @@ The class currently provides the following features:
 
 Use a `scikit-learn`-compatible style to build and fit the model:
 
-```{python}
+```python
 som = SelfOrganizingMap(height=50, width=50, initialization_type='pca')
 X = some_data_provider([...])
 som.fit(X)
@@ -37,13 +37,13 @@ som.fit(X)
 
 There are two ways to set the stopping criterion for the Batch Algorithm. Setting a finite number of iterations (this is actually a long-standing strategy with Self-Organizing Maps), using the `max_iter` parameter:
 
-```{python}
+```python
 som.fit(X, max_iter=50)
 ```
 
 Alternatively, one may use the *average distorion* (see below) as a measure of fit/energy function and try to stop at one of its local minima (as a function of the parameters). The tolerance `tol` against which to compare  average distortion variation is the learning parameter to set, in this case:
 
-```{python}
+```python
 som.fit(X, tol=50)
 ```
 
@@ -53,7 +53,7 @@ The two criteria aren't mutually exclusive. If both are set, the algorithm termi
 
 The main model property of interest (in the Scikit-Learn sense) is the fitted array of prototypes. These are vectors in data-space, hence, they have the same dimensionality as the datapoints. Each prototype is indexed with a pair of non-negative integers, corresponding to the row and column of the corresponding unit.
 
-```{python}
+```python
 som.W_               # an ndarray of shape (height, width, n_features)
 ```
 
@@ -63,7 +63,7 @@ Getting back to the *average distortion*, it is defined as the mean squared dist
 
 Its final value after training is accessed through
 
-```{python}
+```python
 som.avg_distortion_             # a float
 ```
 
@@ -75,19 +75,19 @@ To make the concept precise I implemented a clustering algorithm for the datapoi
 
 Admittedly, this is a rough proof of concept. The literature provides other solutions that I will implement in the near future.
 
-```{python}
+```python
 cluster_labels = som.fit_predict(X, eps=0.5)
 ```
 
 The predicted datapoint cluster labels are accessible through the parameter
 
-```{python}
+```python
 som.labels_
 ```
 
 If interested in the *prototype* cluster labels, they are saved in 
 
-```{python}
+```python
 som.W_cluster_labels_
 ```
 
@@ -95,19 +95,30 @@ som.W_cluster_labels_
 
 If the dataset is 3D, use the following function to display (optionally) the datapoints and (optionally) the prototype mesh:
 
-```{python}
+```python
 som.plot_data_and_prototypes()
 pyplot.show()                   #  matplotlib is required
 ```
 
 Popular visualizations of a trained Self-Organizing Maps are accessible using
 
-```{python}
-som.plot_umatrix()
+```python
+mat = som.umatrix()
 # or
-som.plot_pmatrix()
+mat = som.pmatrix()
 # or
-som.plot_ustarmatrix()
+mat = som.ustarmatrix()
 ```
 
-followed by `pyplot.show()`, as before.
+They can be investigated numerically or simply drawn:
+
+```python
+pyplot.imshow(mat)
+pyplot.show()
+```
+
+### Sample datasets
+
+The `dataset` module provides some examples of datasets to test out the algorithms.
+
+[TODO]

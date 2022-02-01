@@ -23,3 +23,26 @@ def sq_distances(X, W):
     # diff has shape (self.height, self.width, n_samples, n_features)
     diff = X - W[..., np.newaxis, :]
     return np.sum(diff ** 2, axis=-1)
+
+
+def sq_distances1(X, W):
+
+    height, width, _ = W.shape
+    sq_dists = [
+        [
+            batch_dot(X - W[i, j], X - W[i, j])
+            for j in range(width)]
+        for i in range(height)
+    ]
+    return np.array(sq_dists)
+
+
+def test_sq_distances():
+    
+    X = gen.uniform(0, 1, size=(120 * 3,)).reshape((120, 3))
+    W = gen.uniform(0, 1, size=(28 * 28 * 3,)).reshape((28, 28, 3))
+
+    if np.all(np.abs(sq0 - sq1) < 10.0**-10):
+        print("Test passed")
+    else:
+        print("Test not passed")

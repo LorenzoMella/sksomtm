@@ -4,4 +4,7 @@ from .models import SelfOrganizingMap
 
 __version__ = '0.1.1'
 
-__all__ = ['SelfOrganizingMap'] # TODO: add other models when implemented
+# TODO: add other models when implemented
+__all__ = [
+    'SelfOrganizingMap'
+]
