@@ -301,30 +301,37 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
     def _update_W_smooth(self, X):
         """ A single update step of the SOM Batch Algorithm.
         
-        The SOM Batch Algorithm is essentially the Expectation-Maximization
-        Algorithm, maximizing the average distortion E[norm(x - w(x)) ** 2].
+        The SOM Batch Algorithm is analogous to the
+        Expectation-Maximization (EM) Algorithm, minimizing the
+        average distortion E[norm(x - w(x)) ** 2].  It cannot be,
+        however, formulated exactly as EM, without substantial change
+        to the BMU choice rule (see just below).
 
-        In practice, the M-step is replaced by computing
+        In practice, the E-step is replaced by the following
+        point-estimate:
 
-            c(X[n, :]) = argmin( | X[n, :] - W[i, j, :] | ** 2 for (i, j) in units ),
+            c(X[n, :]) = argmin( | X[n, :] - W[i, j, :] | ** 2
+                                for (i, j) in units ),
       
-        where c(X[n, :]) is the unit of the nearest-neighbor prototype to X[n, :].
+        where c(X[n, :]) is the best-matching unit (BMU) corresponding
+        to the nearest prototype to X[n, :].
 
-        The E-step re-computes updates the position of the prototypes W[i, j, :]
-        as
+        The M-step re-computes the locations of the prototypes
+        W[i, j, :] as
 
                          sum( h(j, c(X[n, :])) * X[n, :] for n = 0, ..., n_samples )
             W[i, j, :] = -----------------------------------------------------------
                               sum( h(j, c(X[n, :])) for n = 0, ..., n_samples )
 
-        h is the `neighborhood function' in unit space, which specifies the
-        level of influence that units have among themselves (collaboration),
-        irrespective of the prototype positions.
+        h is the `neighborhood function' in unit space, which
+        specifies the level of influence that units have among
+        themselves (collaboration), irrespective of the prototype
+        positions.
         
-        In this case, h is a spherical Gaussian centered on the best-matching
-        unit.
+        In this case, h is a spherical Gaussian centered on the
+        best-matching unit.
         
-        Other choices of neighbourhood function are:
+        TODO: Other choices of neighbourhood function are:
         
         Student-t pdf (scipy):  h = t(self.neigh_width).pdf(np.sqrt(output_sq_dist))
         Sharp indicator:        h = float(output_sq_dist < self.neigh_width)
