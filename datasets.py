@@ -162,7 +162,16 @@ def linked_rings(std=1.0):
     return X, y, 'rings'
 
 
-def mnist(dataset_path, subset='train'):
+def mnist(
+        dataset_path,
+        filenames=[
+            'train-images.idx3-ubyte',
+            'train-labels.idx1-ubyte',
+            't10k-images.idx3-ubyte',
+            't10k-labels.idx1-ubyte'
+        ],
+        subset='train'
+):
     """ Works with all MNIST (vanilla) files (training and test).
 
     Parameters
@@ -170,6 +179,10 @@ def mnist(dataset_path, subset='train'):
 
     dataset_path : str
         The directory path to the four MNIST data files
+
+    filenames : list of str
+        The four filenames included in the MNIST dataset:
+        (training images, training labels, test images, test labels)
 
     subset : str, default='train'
         The data collection (accepted values: 'train', 'test')
@@ -187,66 +200,74 @@ def mnist(dataset_path, subset='train'):
     name: str
        description string (either 'MNIST-train' or 'MNIST-test')
     """
-
+    
     assert subset in ['train', 'test']
-
+    
     name = 'MNIST-{}'.format(subset)
     
-    if subset == 'test':
-        subset = 't10k'
-
+    idxs = [0, 1] if subset == 'train' else [2, 3]
+    
     dataset_path = normpath(expanduser(dataset_path))
     
     # Fetch the input data
-    filename = '{}-images.idx3-ubyte'.format(subset)
-    images_path = '{}{}{}'.format(dataset_path, sep, filename)
+    images_path = '{}{}{}'.format(dataset_path, sep, filenames[idxs[0]])
+
+    try:
+        f = open(images_path, 'r')
+    except FileNotFoundError:
+        maybe_download_mnist(dataset_path)
 
     X = extract_idx(images_path)
 
-    # The input data is pre-normalized between 0 and 1
+    # Extract and pre-normalize between 0 and 1
     X = X.reshape((X.shape[0], -1)) / 256.
 
     # Fetch the labels
-    filename = '{}-labels.idx1-ubyte'.format(subset)
-    labels_path = '{}{}{}'.format(dataset_path, sep, filename)
+    labels_path = '{}{}{}'.format(dataset_path, sep, filenames[idxs[1]])
+    try:
+        f = open(images_path, 'r')
+    except FileNotFoundError:
+        maybe_download_mnist(dataset_path)
+
     y = extract_idx(labels_path)
 
     return X, y, name
 
 
-def extract_idx(path):
+def maybe_download_mnist(dest_dir):
 
-    with open(path, 'r'):
+    pass
 
-        # First 2 bytes are zero. The third signals the datatype. The 4th the
-        # number of axes of the array
-        first_bytes = np.fromfile(f, dtype=np.uint8, count=4)
-        assert first_bytes[0] == 0 and first_bytes[1] == 0
 
-        # This implementation works only if first_bytes[2] is 0x8, i.e., if the
-        # data are 8-bit unsigned
-        assert first_bytes[2] == 0x08
-        ndim = first_bytes[3]
+def extract_idx(f):
 
-        # The next ndim 32-bit sequences are unsigned integers representing the axes sizes
-        sizes = np.fromfile(f, dtype=np.uint32, count=ndim)
+    # First 2 bytes are zero. The third signals the datatype. The 4th the
+    # number of axes of the array
+    first_bytes = np.fromfile(f, dtype=np.uint8, count=4)
+    assert first_bytes[0] == 0 and first_bytes[1] == 0
 
-        # System endianness: byteorder in ['big', 'little'].
-        # The vanilla MNIST files are all big-endian. Convert if needed
-        if byteorder == 'little':
-            sizes.byteswap(True)
+    # This implementation works only if first_bytes[2] is 0x8, i.e., if the
+    # data are 8-bit unsigned
+    assert first_bytes[2] == 0x08
+    ndim = first_bytes[3]
 
-        # The first feature represents samples
-        max_elements = 1
-        for size in sizes:
-            max_elements *= size
+    # The next ndim 32-bit sequences are unsigned integers representing the axes sizes
+    sizes = np.fromfile(f, dtype=np.uint32, offset=4, count=ndim)
 
-        # The greyscale levels are encoded as unsigned byte: no byteswap needed
-        data = np.fromfile(f, dtype=np.uint8, count=max_elements)
+    # System endianness: byteorder in ['big', 'little'].
+    # The vanilla MNIST files are all big-endian. Convert if needed
+    if byteorder == 'little':
+        sizes.byteswap(True)
 
-        # Data is converted to float64, put in matrix format
-        data = data.reshape(sizes).astype(np.float64)
-        
-    f.close()
+    # The first feature represents samples
+    max_elements = 1
+    for size in sizes:
+        max_elements *= size
 
+    # The greyscale levels are encoded as unsigned byte: no byteswap needed
+    data = np.fromfile(f, dtype=np.uint8, count=max_elements)
+
+    # Data is converted to float64, put in matrix format
+    data = data.reshape(sizes).astype(np.float64)
+    
     return data

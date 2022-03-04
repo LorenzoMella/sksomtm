@@ -6,9 +6,9 @@ The module aims to provide estimator classes compatible with the Scikit-Learn AP
 
 The class relies on the fast *Batch Algorithm*, implemented fully in `numpy`, in a compact, highly vectorized style that should scale well to larger maps and datasets.
 
-Self-Organizing Maps can be thought of, in principle, as a generalization of *Vector Quantization* (K-Means clustering), in that they aim to recreate the topological structure of the dataset ![](https://render.githubusercontent.com/render/math?math=\{\boldsymbol{x}_1,\ldots,\boldsymbol{x}_n\}) using a finite number of prototype vectors ![](https://render.githubusercontent.com/render/math?math=\{\boldsymbol{w}_{i,j}\}).
+Self-Organizing Maps can be thought of, in principle, as a generalization of *Vector Quantization* (K-Means clustering), in that they aim to recreate the topological structure of the dataset {**x**~1~,...,**x**~*N*~} using a finite number of prototype vectors **w**~*i,\ j*~.
 
-The difference between K-Means and Self-Organizing Maps is that the prototypes aren't just a set of centroids, whose corresponding Voronoi Cells are the clusters. On the contrary, they are interrelated through a fixed rectangular 2D graph (with coordinates *i, j*), which dictates a regime of collaboration among its units, according to their neighborhood relationship within the graph: the corrective displacements applied by the algorithm to the prototype ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i,j}) is propagated to the ones corresponding to neighboring units ![](https://render.githubusercontent.com/render/math?math=\boldsymbol{w}_{i',j'}), with an effect modulated over the distance ![](https://render.githubusercontent.com/render/math?math=\vert\(i,j\)-\(i',j'\)\vert), according to an appropriate neighborhood function.
+The difference between K-Means and Self-Organizing Maps is that the prototypes aren't just a set of centroids, whose corresponding Voronoi Cells are the clusters. On the contrary, they are interrelated through a fixed rectangular 2D graph (with coordinates *i, j*), which dictates a regime of collaboration among its units, according to their neighborhood relationship within the graph: the corrective displacements applied by the algorithm to the prototype **w**~*i,\ j*~ is propagated to the ones corresponding to neighboring units **w**~*i\',\ j\'*~, with an effect modulated over the distance ‖(*i*, *j*) – (*i\'*, *j\'*)‖, according to an appropriate neighborhood function.
 
 If the graph relations are displayed in data-space connecting the prototypes with the appropriate edges, we can see that what the Self-Organizing Map does is recreating as best as possible the multidimensional distribution of the data bending and stretching a 2D blanket of discrete points.
 
@@ -59,7 +59,7 @@ som.W_               # an ndarray of shape (height, width, n_features)
 
 Getting back to the *average distortion*, it is defined as the mean squared distance between each prototype and its best-matching-unit (BMU) prototype:
 
-![](https://render.githubusercontent.com/render/math?math=\overline{D^2}=\frac{1}{N}\sum_{n=1}^{N}\Vert\boldsymbol{x}_{n}-\boldsymbol{w}_{BMU(\boldsymbol{x}_{n})}\Vert^2 "Average distortion formula")
+![](https://render.githubusercontent.com/render/math?math=\overline{D^2}=\frac{1}{N}\sum_{n=1}^{N}\Vert\boldsymbol{x}_{n}-\boldsymbol{w}_{\mathrm{BMU}(\boldsymbol{x}_{n})}\Vert^2 "Average distortion formula")
 
 Its final value after training is accessed through
 
@@ -119,6 +119,9 @@ pyplot.show()
 
 ### Sample datasets
 
-The `dataset` module provides some examples of datasets to test out the algorithms.
+The `dataset` module provides some examples of datasets to test out the algorithms. The available datasets are:
 
-[TODO]
+1. *Iris* dataset (`iris` function): the classical example dataset on Iris species classification, popularized by Ronald Fisher. The user should provide the CSV datafile (e.g., from![https://archive.ics.uci.edu/ml/datasets/Iris](https://archive.ics.uci.edu/ml/datasets/Iris)).
+2. *Polygon Clusters* dataset (`polygon_vertex_clusters` function): a very simple classification task: eight point clouds at the vertices of a cube. The Gaussian clouds of points can be enlarged passing a larger `std` argument, for greater difficulty in their separation.
+3. *Linked Rings* dataset: an artificial dataset composed of two interlocking rings. Most elementary clustering algorithms have difficulties with this 3D structure. An `std` parameter is also present, allowing to enlarge the circular cross-section of the rings.
+4. *MNIST* dataset: the well-known benchmark dataset for classification. The function is a loader for either the training or test 28⨉28 black and white images representing human-written digits. The data is loaded as a linear 784-long vector of float intensities between 0 and 1 (normalized from the original integer values). The user should provide the CSV datafile (e.g., from ![http://yann.lecun.com/exdb/mnist](http://yann.lecun.com/exdb/mnist)).

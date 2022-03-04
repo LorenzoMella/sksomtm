@@ -50,8 +50,10 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         The width parameter of the neighborhood function (the variance if
         the neighborhood function is Gaussian)
 
-    neighborhood_type : (unused)
-        NOT IMPLEMENTED: changes the neighborhood function in the unit-space
+    neighborhood_type : default='gaussian'
+        Dictates the choice of neighborhood function that describes
+        the level of collaboration among units, centered around a
+        winning unit (only 'gaussian' is currently implemented)
 
     init : {'random', 'pca'}, callable or ndarray of shape \
             (height, width, n_features), default='pca'
@@ -95,7 +97,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
             height=30,
             width=30,
             neigh_width=16.0,
-            neighborhood_type='Gaussian',
+            neighborhood_type='gaussian',
             init='pca',
             seed=None
     ):
@@ -106,7 +108,9 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         self.width = width
         self.neigh_width = neigh_width        
         self.n_weights = height * width
+
         self.neighborhood_type = neighborhood_type
+
         self.init = init
         self.seed = seed
 
@@ -331,13 +335,6 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         In this case, h is a spherical Gaussian centered on the
         best-matching unit.
         
-        TODO: Other choices of neighbourhood function are:
-        
-        Student-t pdf (scipy):  h = t(self.neigh_width).pdf(np.sqrt(output_sq_dist))
-        Sharp indicator:        h = float(output_sq_dist < self.neigh_width)
-        Cauchy pdf:             h = 1. / (1. + (output_sq_dist / self.neigh_width) ** 2)
-        Gaussian difference:    h = a * np.exp(-0.5 * output_sq_dist / self.neigh_width_a) -
-                                    b * np.exp(-0.5 * output_sq_dist / self.neigh_width_b)
         """
 
         n_samples, _ = X.shape
@@ -357,7 +354,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
 
         # Compute all values of the neighborhood function
         h = np.exp(-0.5 * output_sq_dist / self.neigh_width)
-
+        
         # Compute the numerator of the prototype update
         weighted_sum_X = np.dot(h, X)
 
@@ -368,7 +365,7 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         try:
             W_new = np.divide(weighted_sum_X, weight_sum[..., np.newaxis])
 
-        except FloatingPointError('Possible overflow or division by zero'):
+        except FloatingPointError:
             bad_indices = np.logical_or(np.isnan(W_new), np.isinf(W_new))
             W_new[bad_indices] = self.W_[bad_indices]
 
@@ -490,17 +487,25 @@ class SelfOrganizingMap(BaseEstimator, ClusterMixin):
         # Draw the prototype mesh
         if draw_prototypes:
             ax.plot_wireframe(
-                self.W_[..., 0],  self.W_[..., 1], self.W_[..., 2],
-                linewidth=.3, color='k'
+                self.W_[..., 0], self.W_[..., 1], self.W_[..., 2],
+                linewidth=.3,
+                color='k'
             )
             ax.scatter(
                 self.W_[..., 0], self.W_[..., 1], self.W_[..., 2],
-                'b.', s=25
+                color='b',
+                marker='.',
+                s=25
             )
 
         # Draw the datapoints
         if draw_data:
-            ax.scatter(X[:, 0], X[:, 1], X[:, 2], c='r', marker='.', s=25)
+            ax.scatter(
+                X[:, 0], X[:, 1], X[:, 2],
+                color='r',
+                marker='.',
+                s=25
+            )
 
         ax.set_axis_off()
 
